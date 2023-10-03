@@ -37,13 +37,14 @@ function drawCameraIntoCanvas() {
   // drawSkeleton();
   logChanges();
   handleJump();
+
   window.requestAnimationFrame(drawCameraIntoCanvas);
 }
 // Loop over the drawCameraIntoCanvas function
 drawCameraIntoCanvas();
 
 // Create a new poseNet method with a single detection
-const poseNet = ml5.poseNet(video, modelReady);
+const poseNet = ml5.poseNet(video,{ detectionType: "multiple"} , modelReady);
 poseNet.on("pose", gotPoses);
 
 // A function that gets called every time there's an update from the model
@@ -83,7 +84,7 @@ function logChanges() {
     // console.log(poses[0].pose.keypoints[0]);
     // For each pose detected, loop through all the keypoints
     for (let j = 0; j < poses[i].pose.keypoints.length; j += 1) {
-      let keypoint = poses[i].pose.keypoints[j];
+      let keypoint = poses[i].pose.keypoints[0];
       // Only draw an ellipse is the pose probability is bigger than 0.2
       if (keypoint.score > 0.3) {
         ctx.strokeStyle = "yellow"; // You can use any valid CSS color here
@@ -123,12 +124,31 @@ function drawSkeleton() {
 
 function handleJump() {
   if (poses.length > 0) {
-    let rightShoulderKeypoint = poses[0].pose.keypoints[6];
-    let leftShoulderKeypoint = poses[0].pose.keypoints[5];
+    // let rightShoulderKeypoint = poses[0].pose.keypoints[6];
+    // let leftShoulderKeypoint = poses[0].pose.keypoints[5];
 
-    console.log(
-      `rY: ${rightShoulderKeypoint.position.y} \n lY: ${leftShoulderKeypoint.position.y} \n`,
-      `rX: ${rightShoulderKeypoint.position.x} \n lX: ${leftShoulderKeypoint.position.x}`
-    );
+    // console.log(
+    //   `rY: ${rightShoulderKeypoint.position.y} \n lY: ${leftShoulderKeypoint.position.y} \n`,
+    //   `rX: ${rightShoulderKeypoint.position.x} \n lX: ${leftShoulderKeypoint.position.x}`
+    // );
+
+    // Get the position of the person's head and feet
+    let headY = poses[0].pose.keypoints[0].position.y;
+    console.log(`nose Y axis: ${headY}`)
+
+    // Detect a jump if the person's height is greater than 1.5 times their normal height
+    const jumpDetected = headY < 70;
+
+    // Detect a crouch if the person's height is less than 0.5 times their normal height
+    const crouchDetected = headY > 380;
+
+    if (jumpDetected) {
+      console.log('jump');
+    } else if (crouchDetected) {
+      console.log('crouch')
+    }
   }
 }
+
+// y up is 0, y down not sure, 300?
+// x left is 0, x right not sure, 300?
