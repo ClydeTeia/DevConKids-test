@@ -129,7 +129,7 @@ function drawSkeleton() {
   }
 }
 
-function handleJump() {
+function handlePose() {
   if (poses.length > 0) {
     // let rightShoulderKeypoint = poses[0].pose.keypoints[6];
     // let leftShoulderKeypoint = poses[0].pose.keypoints[5];
@@ -189,15 +189,13 @@ async function handleCalibration() {
 }
 
 function getPositionY() {
-  let leftShoulderKeypoint = poses[0].pose.keypoints[5];
-  let rightShoulderKeypoint = poses[0].pose.keypoints[6];
+  let leftShoulderKeypoint = poses[0].pose.keypoints[5].position.y;
+  let rightShoulderKeypoint = poses[0].pose.keypoints[6].position.y;
 
-  yAxixLeftShoulderLine = leftShoulderKeypoint.position.y;
-  yAxisRightShoulderLine = rightShoulderKeypoint.position.y;
   yAxisNoseLine = poses[0].pose.keypoints[0].position.y;
   calibrateNoseLineY = yAxisNoseLine;
 
-  calibratedYLine = (yAxixLeftShoulderLine + yAxisRightShoulderLine) / 2;
+  calibratedYLine = (leftShoulderKeypoint + rightShoulderKeypoint) / 2;
   console.log(calibrateNoseLineY);
   console.log(`Calibrated Y ${calibratedYLine}`);
 }
