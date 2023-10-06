@@ -1,75 +1,60 @@
 import {
-  getCustomProperty,
-  incrementCustomProperty,
   setCustomProperty,
+  incrementCustomProperty,
+  getCustomProperty,
 } from "./updateCustomProperty.js";
 
-const dinoElem = document.querySelector("[data-dino]");
-const JUMP_SPEED = 0.45;
-const GRAVITY = 0.0015;
-const DINO_FRAME_COUNT = 2;
-const FRAME_TIME = 100;
+const SPEED = 0.05; // make sure this is the same with SPEED in ground.js
+const CACTUS_INTERVAL_MIN = 700;
+const CACTUS_INTERVAL_MAX = 2000;
+const worldElem = document.querySelector("[data-world]");
 
-let isJumping;
-let dinoFrame;
-let currentFrameTime;
-let yVelocity;
-
-export function setupDino() {
-  isJumping = false;
-  dinoFrame = 0;
-  currentFrameTime = 0;
-  yVelocity = 0;
-  setCustomProperty(dinoElem, "--bottom", 0);
-  document.removeEventListener("keydown", onJump);
-  document.addEventListener("keydown", onJump);
+let nextCactusTime;
+export function setupCactus() {
+  nextCactusTime = CACTUS_INTERVAL_MIN;
+  document.querySelectorAll("[data-cactus]").forEach((cactus) => {
+    cactus.remove();
+  });
 }
 
-export function updateDino(delta, speedScale) {
-  handleRun(delta, speedScale);
-  handleJump(delta);
-}
+export function updateCactus(delta, speedScale) {
+  document.querySelectorAll("[data-cactus]").forEach((cactus) => {
+    incrementCustomProperty(cactus, "--left", delta * speedScale * SPEED * -1);
+    if (getCustomProperty(cactus, "--left") <= -100) {
+      cactus.remove();
+    }
+  });
 
-export function getDinoRect() {
-  return dinoElem.getBoundingClientRect();
-}
-
-export function setDinoLose() {
-  dinoElem.src = "imgs/dino-lose.PNG";
-}
-
-function handleRun(delta, speedScale) {
-  if (isJumping) {
-    dinoElem.src = `imgs/dino-stationary.PNG`;
-    return;
+  if (nextCactusTime <= 0) {
+    createCactus();
+    nextCactusTime =
+      randomNumberBetween(CACTUS_INTERVAL_MIN, CACTUS_INTERVAL_MAX) /
+      speedScale;
   }
-
-  // swaps between 2 pictures
-  if (currentFrameTime >= FRAME_TIME) {
-    dinoFrame = (dinoFrame + 1) % DINO_FRAME_COUNT; // ranges between 0 and 1
-    dinoElem.src = `imgs/dino-run-${dinoFrame}.PNG`;
-    currentFrameTime -= FRAME_TIME;
-  }
-
-  currentFrameTime += delta * speedScale;
+  nextCactusTime -= delta;
 }
 
-function handleJump(delta) {
-  if (!isJumping) return;
-
-  incrementCustomProperty(dinoElem, "--bottom", yVelocity * delta);
-
-  if (getCustomProperty(dinoElem, "--bottom") <= 0) {
-    setCustomProperty(dinoElem, "--bottom", 0);
-    isJumping = false;
-  }
-
-  yVelocity -= GRAVITY * delta;
+export function getCactusRects() {
+  return [...document.querySelectorAll("[data-cactus]")].map((cactus) => {
+    return cactus.getBoundingClientRect();
+  });
 }
 
-function onJump(e) {
-  if (e.code !== "Space" || isJumping) return;
+const obstacleSprites = [
+  "imgs/obstacle1.png",
+  "imgs/obstacle2.png",
+  "imgs/obstacle3.png",
+];
 
-  yVelocity = JUMP_SPEED;
-  isJumping = true;
+function createCactus() {
+  const cactus = document.createElement("img");
+  cactus.dataset.cactus = true;
+  cactus.src = obstacleSprites[Math.floor(Math.random() * 3)];
+  cactus.classList.add("cactus");
+  setCustomProperty(cactus, "--left", 100);
+  worldElem.append(cactus);
+}
+
+function randomNumberBetween(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min);
 }
