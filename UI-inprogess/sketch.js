@@ -44,7 +44,7 @@ function drawCameraIntoCanvas() {
   // drawSkeleton();
   logChanges();
   handleCalibration();
-  handleJump();
+
   window.requestAnimationFrame(drawCameraIntoCanvas);
 }
 // Loop over the drawCameraIntoCanvas function
@@ -129,7 +129,7 @@ function drawSkeleton() {
   }
 }
 
-function handlePose() {
+export function handlePose() {
   if (poses.length > 0) {
     // let rightShoulderKeypoint = poses[0].pose.keypoints[6];
     // let leftShoulderKeypoint = poses[0].pose.keypoints[5];
@@ -161,15 +161,17 @@ function handlePose() {
 
       // Detect a crouch if the person's height is less than 0.5 times their normal height
       const crouchDetected = calibrateNoseLineY < headY - 70;
+      // console.log(calibrateNoseLineY);
 
       if (jumpDetected) {
-        console.log("jump");
+        return "JUMP";
       } else if (crouchDetected) {
-        console.log("crouch");
+        return "CROUCH";
+      } else {
+        return "STANDING";
       }
 
       // console.log(poses[0].pose.keypoints[0].position.x);
-      console.log(calibrateNoseLineY);
     }
   }
 }
@@ -189,19 +191,18 @@ async function handleCalibration() {
 }
 
 function getPositionY() {
-  let leftShoulderKeypoint = poses[0].pose.keypoints[5];
-  let rightShoulderKeypoint = poses[0].pose.keypoints[6];
+  console.log(poses);
+  let leftShoulderKeypoint = poses[0].pose.keypoints[5].position.y;
+  let rightShoulderKeypoint = poses[0].pose.keypoints[6].position.y;
 
-  yAxixLeftShoulderLine = leftShoulderKeypoint.position.y;
-  yAxisRightShoulderLine = rightShoulderKeypoint.position.y;
-  yAxixNoseLine = poses[0].pose.keypoints[0].position.y;
-  calibrateNoseLineY = yAxixNoseLine;
+  yAxisNoseLine = poses[0].pose.keypoints[0].position.y;
+  calibrateNoseLineY = yAxisNoseLine;
 
   calibratedYLine = (leftShoulderKeypoint + rightShoulderKeypoint) / 2;
   console.log(calibrateNoseLineY);
   console.log(`Calibrated Y ${calibratedYLine}`);
 }
 
-function restartCalibration() {
+export function restartCalibration() {
   hasCalibrated = false;
 }
