@@ -25,6 +25,10 @@ let calibrateNoseLineY;
 let yAxisNoseLine;
 let calibratedYLine;
 
+let headY = 0;
+let jumpDetected = false;
+let crouchDetected = false;
+
 let poses = [];
 
 // Create a webcam capture
@@ -41,6 +45,7 @@ function drawCameraIntoCanvas() {
   logChanges();
   handleJump();
   handleCalibration();
+  handleRun();
   window.requestAnimationFrame(drawCameraIntoCanvas);
 }
 // Loop over the drawCameraIntoCanvas function
@@ -51,6 +56,10 @@ poseNet.on("pose", gotPoses);
 
 function gotPoses(results) {
   poses = results;
+  console.log(poses);
+  console.log(`Head Y: ${headY}`);
+  console.log(`Jump Detected: ${jumpDetected}`);
+  console.log(`Crouch Detected: ${crouchDetected}`);
   if (poses.length > 0) {
     if (
       poses[0].pose.keypoints[0].position.x >= 100 &&
@@ -75,7 +84,8 @@ function gotPoses(results) {
       const crouchDetected = calibrateNoseLineY < headY - 70;
 
       if (jumpDetected) {
-        handleJump();
+        yVelocity = JUMP_SPEED;
+        isJumping = true;
         console.log("jump");
       } else if (crouchDetected) {
         console.log("crouch");
@@ -147,6 +157,7 @@ export function setDinoLose() {
 }
 
 function handleRun(delta, speedScale) {
+  console.log("Check if Jumping " + isJumping);
   if (isJumping) {
     dinoElem.src = `imgs/dino-stationary.PNG`;
     return;

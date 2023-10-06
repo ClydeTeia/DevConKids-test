@@ -163,7 +163,7 @@ function handleJump() {
       const crouchDetected = calibrateNoseLineY < headY - 70;
 
       if (jumpDetected) {
-        console.log("jump");
+        return true;
       } else if (crouchDetected) {
         console.log("crouch");
       }
