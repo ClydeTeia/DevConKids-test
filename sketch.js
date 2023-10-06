@@ -129,11 +129,20 @@ function drawSkeleton() {
   }
 }
 
-function handlePose() {
+function handleJump() {
   if (poses.length > 0) {
+    // let rightShoulderKeypoint = poses[0].pose.keypoints[6];
+    // let leftShoulderKeypoint = poses[0].pose.keypoints[5];
+
+    // console.log(
+    //   `rY: ${rightShoulderKeypoint.position.y} \n lY: ${leftShoulderKeypoint.position.y} \n`,
+    //   `rX: ${rightShoulderKeypoint.position.x} \n lX: ${leftShoulderKeypoint.position.x}`
+    // );
+
+    // Get the position of the person's head and feet
     if (
-      poses[0].pose.keypoints[0].position.x >= 150 &&
-      poses[0].pose.keypoints[0].position.x <= 500
+      poses[0].pose.keypoints[0].position.x >= 100 &&
+      poses[0].pose.keypoints[0].position.x <= 550
     ) {
       // test start
       let keypoint = poses[0].pose.keypoints[0];
@@ -154,11 +163,12 @@ function handlePose() {
       const crouchDetected = calibrateNoseLineY < headY - 70;
 
       if (jumpDetected) {
-        return "JUMPING";
+        console.log("jump");
       } else if (crouchDetected) {
-        return "CROUCHING";
+        console.log("crouch");
       }
 
+      // console.log(poses[0].pose.keypoints[0].position.x);
       console.log(calibrateNoseLineY);
     }
   }
@@ -179,13 +189,15 @@ async function handleCalibration() {
 }
 
 function getPositionY() {
-  let leftShoulderKeypoint = poses[0].pose.keypoints[5].position.y;
-  let rightShoulderKeypoint = poses[0].pose.keypoints[6].position.y;
+  let leftShoulderKeypoint = poses[0].pose.keypoints[5];
+  let rightShoulderKeypoint = poses[0].pose.keypoints[6];
 
+  yAxixLeftShoulderLine = leftShoulderKeypoint.position.y;
+  yAxisRightShoulderLine = rightShoulderKeypoint.position.y;
   yAxisNoseLine = poses[0].pose.keypoints[0].position.y;
   calibrateNoseLineY = yAxisNoseLine;
 
-  calibratedYLine = (leftShoulderKeypoint + rightShoulderKeypoint) / 2;
+  calibratedYLine = (yAxixLeftShoulderLine + yAxisRightShoulderLine) / 2;
   console.log(calibrateNoseLineY);
   console.log(`Calibrated Y ${calibratedYLine}`);
 }

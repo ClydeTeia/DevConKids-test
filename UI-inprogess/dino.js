@@ -22,6 +22,7 @@ let currentFrameTime;
 let yVelocity;
 
 let calibrateNoseLineY;
+let yAxisNoseLine;
 let calibratedYLine;
 
 let poses = [];
@@ -39,6 +40,7 @@ function drawCameraIntoCanvas() {
   gotPoses(poses);
   logChanges();
   handleJump();
+  handleCalibration();
   window.requestAnimationFrame(drawCameraIntoCanvas);
 }
 // Loop over the drawCameraIntoCanvas function
@@ -47,24 +49,40 @@ drawCameraIntoCanvas();
 const poseNet = ml5.poseNet(video, modelReady);
 poseNet.on("pose", gotPoses);
 
-function gotPoses(poses) {
+function gotPoses(results) {
+  poses = results;
   if (poses.length > 0) {
-    const leftShoulderKeypoint = poses[0].pose.keypoints[5].position.y;
-    const rightShoulderKeypoint = poses[0].pose.keypoints[6].position.y;
+    if (
+      poses[0].pose.keypoints[0].position.x >= 100 &&
+      poses[0].pose.keypoints[0].position.x <= 550
+    ) {
+      // test start
+      let keypoint = poses[0].pose.keypoints[0];
+      if (keypoint.score > 0.3) {
+        ctx.strokeStyle = "blue"; // You can use any valid CSS color here
+        ctx.beginPath();
+        ctx.arc(keypoint.position.x, keypoint.position.y, 10, 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+      // test end
+      let headY = poses[0].pose.keypoints[0].position.y;
+      console.log(`nose Y axis: ${headY}`);
 
-    let currentShouldersY = (leftShoulderKeypoint + rightShoulderKeypoint) / 2;
+      // Detect a jump if the person's height is greater than 1.5 times their normal height
+      const jumpDetected = calibrateNoseLineY > headY + 70;
 
-    if (calibratedYLine > currentShouldersY + 70) {
-      // Adjust the threshold as needed
-      // Trigger the jump action
-      handleJump();
-      isCrouching = false;
-    } else if (calibratedYLine < currentShouldersY - 70) {
-      isCrouching = true;
-      isJumping = false;
-    } else {
-      isJumping = false;
-      isCrouching = false;
+      // Detect a crouch if the person's height is less than 0.5 times their normal height
+      const crouchDetected = calibrateNoseLineY < headY - 70;
+
+      if (jumpDetected) {
+        handleJump();
+        console.log("jump");
+      } else if (crouchDetected) {
+        console.log("crouch");
+      }
+
+      // console.log(poses[0].pose.keypoints[0].position.x);
+      console.log(calibrateNoseLineY);
     }
   }
 }
@@ -77,7 +95,7 @@ function modelReady() {
 async function handleCalibration() {
   try {
     if (!hasCalibrated) {
-      setTimeout(getPositionY, 10);
+      setTimeout(getPositionY, 7000);
       hasCalibrated = true;
     }
   } catch (error) {
@@ -85,22 +103,16 @@ async function handleCalibration() {
   }
 }
 
-async function getPositionY() {
-  if (poses && Array.isArray(poses) && poses.length > 0 && poses[0].pose) {
-    let leftShoulderKeypoint = poses[0].pose.keypoints[5].position.y;
-    let rightShoulderKeypoint = poses[0].pose.keypoints[6].position.y;
+function getPositionY() {
+  let leftShoulderKeypoint = poses[0].pose.keypoints[5].position.y;
+  let rightShoulderKeypoint = poses[0].pose.keypoints[6].position.y;
 
-    yAxisNoseLine = poses[0].pose.keypoints[0].position.y;
-    calibrateNoseLineY = yAxisNoseLine;
+  yAxisNoseLine = poses[0].pose.keypoints[0].position.y;
+  calibrateNoseLineY = yAxisNoseLine;
 
-    calibratedYLine = (leftShoulderKeypoint + rightShoulderKeypoint) / 2;
-    console.log(calibrateNoseLineY);
-    console.log(`Calibrated Y ${calibratedYLine}`);
-  } else {
-    console.error(
-      "Poses are not available or do not have the expected structure."
-    );
-  }
+  calibratedYLine = (leftShoulderKeypoint + rightShoulderKeypoint) / 2;
+  console.log(calibrateNoseLineY);
+  console.log(`Calibrated Y ${calibratedYLine}`);
 }
 
 function restartCalibration() {
@@ -109,6 +121,7 @@ function restartCalibration() {
 
 export function setupDino() {
   isJumping = false;
+  isCrouching = false;
   dinoFrame = 0;
   currentFrameTime = 0;
   yVelocity = 0;
