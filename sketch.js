@@ -131,14 +131,6 @@ function drawSkeleton() {
 
 function handleJump() {
   if (poses.length > 0) {
-    // let rightShoulderKeypoint = poses[0].pose.keypoints[6];
-    // let leftShoulderKeypoint = poses[0].pose.keypoints[5];
-
-    // console.log(
-    //   `rY: ${rightShoulderKeypoint.position.y} \n lY: ${leftShoulderKeypoint.position.y} \n`,
-    //   `rX: ${rightShoulderKeypoint.position.x} \n lX: ${leftShoulderKeypoint.position.x}`
-    // );
-
     // Get the position of the person's head and feet
     if (
       poses[0].pose.keypoints[0].position.x >= 200 &&
@@ -179,7 +171,6 @@ function handleJump() {
       ctx.moveTo(0, calibratedYLine);
       ctx.lineTo(640, calibratedYLine);
       ctx.stroke();
-      
     }
   }
 }
@@ -202,9 +193,6 @@ function getPositionY() {
   let leftShoulderKeypoint = poses[0].pose.keypoints[5].position.y;
   let rightShoulderKeypoint = poses[0].pose.keypoints[6].position.y;
 
-  // yAxisNoseLine = poses[0].pose.keypoints[0].position.y; // for testing
-  // calibrateNoseLineY = yAxisNoseLine;
-
   calibratedYLine = (leftShoulderKeypoint + rightShoulderKeypoint) / 2;
   console.log(calibrateNoseLineY);
   console.log(`Calibrated Y ${calibratedYLine}`);
@@ -212,6 +200,4 @@ function getPositionY() {
 
 function restartCalibration() {
   hasCalibrated = false;
-  // setTimeout(getPositionY, 7000);
-  // hasCalibrated = true;
 }
