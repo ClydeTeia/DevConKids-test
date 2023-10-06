@@ -189,11 +189,13 @@ async function handleCalibration() {
 }
 
 function getPositionY() {
-  let leftShoulderKeypoint = poses[0].pose.keypoints[5].position.y;
-  let rightShoulderKeypoint = poses[0].pose.keypoints[6].position.y;
+  let leftShoulderKeypoint = poses[0].pose.keypoints[5];
+  let rightShoulderKeypoint = poses[0].pose.keypoints[6];
 
-  yAxisNoseLine = poses[0].pose.keypoints[0].position.y;
-  calibrateNoseLineY = yAxisNoseLine;
+  yAxixLeftShoulderLine = leftShoulderKeypoint.position.y;
+  yAxisRightShoulderLine = rightShoulderKeypoint.position.y;
+  yAxixNoseLine = poses[0].pose.keypoints[0].position.y;
+  calibrateNoseLineY = yAxixNoseLine;
 
   calibratedYLine = (leftShoulderKeypoint + rightShoulderKeypoint) / 2;
   console.log(calibrateNoseLineY);
