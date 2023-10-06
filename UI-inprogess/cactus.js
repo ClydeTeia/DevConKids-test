@@ -24,22 +24,9 @@ export function updateCactus(delta, speedScale) {
       cactus.remove();
     }
   });
-  document
-    .querySelectorAll("[data-flyingObstacle]")
-    .forEach((flyingObstacle) => {
-      incrementCustomProperty(
-        flyingObstacle,
-        "--left",
-        delta * speedScale * SPEED * -1
-      );
-      if (getCustomProperty(flyingObstacle, "--left") <= -100) {
-        flyingObstacle.remove();
-      }
-    });
 
   if (nextCactusTime <= 0) {
     createCactus();
-    createFlyingObstacle();
     nextCactusTime =
       randomNumberBetween(CACTUS_INTERVAL_MIN, CACTUS_INTERVAL_MAX) /
       speedScale;
@@ -56,27 +43,18 @@ export function getCactusRects() {
 const obstacleSprites = [
   "imgs/obstacle1.png",
   "imgs/obstacle2.png",
-  "imgs/obstacle3.png",
-];
+  "imgs/obstacle3.png"
+]
 
 function createCactus() {
   const cactus = document.createElement("img");
   cactus.dataset.cactus = true;
   cactus.src = obstacleSprites[Math.floor(Math.random() * 3)];
   cactus.classList.add("cactus");
-  setCustomProperty(cactus, "--left", 10);
+  setCustomProperty(cactus, "--left", 100);
   worldElem.append(cactus);
 }
 
 function randomNumberBetween(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
-}
-
-function createFlyingObstacle() {
-  const flyingObstacle = document.createElemet("img");
-  flyingObstacle.dataset.flyingObstacle = true;
-  flyingObstacle.src = obstacleSprites[Math.floor(Math.random() * 3)];
-  flyingObstacle.classList.add("flyingObstacle");
-  setCustomProperty(flyingObstacle, "--left", 100);
-  worldElem.append(flyingObstacle);
 }
