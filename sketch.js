@@ -1,7 +1,8 @@
 let canvas;
 
-export const detectedJump = false;
-export const detectedCrouch = false;
+export let detectedJump = false;
+export let detectedCrouch = false;
+export let detectedStand = true;
 
 document.addEventListener("DOMContentLoaded", () => {
   // Initialize PoseNet and set up other code related to your application
@@ -143,21 +144,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function detectAction() {
       if (poses.length > 0) {
-        // let rightShoulderKeypoint = poses[0].pose.keypoints[6];
-        // let leftShoulderKeypoint = poses[0].pose.keypoints[5];
-
-        // console.log(
-        //   `rY: ${rightShoulderKeypoint.position.y} \n lY: ${leftShoulderKeypoint.position.y} \n`,
-        //   `rX: ${rightShoulderKeypoint.position.x} \n lX: ${leftShoulderKeypoint.position.x}`
-        // );
-
-        // Get the position of the person's head and feet
         if (
           poses[0].pose.keypoints[0].position.x >= 100 &&
-          poses[0].pose.keypoints[0].position.x <= 550
+          poses[0].pose.keypoints[0].position.x <= 450
         ) {
           // test start
+
+          let currleftShoulderKeypoint = poses[0].pose.keypoints[5].position.y;
+          let currRightShoulderKeypoint = poses[0].pose.keypoints[6].position.y;
+
+          let currShoulderYLine =
+            (currleftShoulderKeypoint + currRightShoulderKeypoint) / 2;
+          console.log(`Current: ${currShoulderYLine}`);
           let keypoint = poses[0].pose.keypoints[0];
+
           if (keypoint.score > 0.3) {
             ctx.strokeStyle = "blue"; // You can use any valid CSS color here
             ctx.beginPath();
@@ -175,18 +175,45 @@ document.addEventListener("DOMContentLoaded", () => {
           console.log(`nose Y axis: ${noseY}`);
 
           // Detect a jump if the person's height is greater than 1.5 times their normal height
-          const jumpDetected = calibrateNoseLineY > noseY + 70;
+          const jumpDetected = calibrateNoseLineY > noseY + 30;
 
           // Detect a crouch if the person's height is less than 0.5 times their normal height
-          const crouchDetected = calibrateNoseLineY < noseY - 70;
+          const crouchDetected = calibrateNoseLineY < noseY - 30;
+          console.log("calibrate nose line " + Math.floor(calibrateNoseLineY));
+
+          ctx.strokeStyle = "red"; // You can use any valid CSS color here
+          ctx.beginPath();
+          ctx.moveTo(0, calibratedYLine);
+          ctx.lineTo(640, calibratedYLine);
+          ctx.stroke();
+
+          ctx.strokeStyle = "red"; // You can use any valid CSS color here
+          ctx.beginPath();
+          ctx.moveTo(0, calibrateNoseLineY);
+          ctx.lineTo(640, calibrateNoseLineY);
+          ctx.stroke();
 
           if (jumpDetected) {
+            console.log("jump");
+            detectedJump = true;
+            detectedCrouch = false;
+            detectedStand = false;
           } else if (crouchDetected) {
             console.log("crouch");
+            detectedCrouch = true;
+            detectedJump = false;
+            detectedStand = false;
+          } else {
+            console.log("stand");
+            detectedStand = true;
+            detectedJump = false;
+            detectedCrouch = false;
           }
-
-          // console.log(poses[0].pose.keypoints[0].position.x);
-          console.log(calibrateNoseLineY);
+        } else {
+          // No poses detected, reset all action flags
+          detectedJump = false;
+          detectedCrouch = false;
+          detectedStand = false;
         }
       }
     }
