@@ -141,8 +141,8 @@ function handleJump() {
 
     // Get the position of the person's head and feet
     if (
-      poses[0].pose.keypoints[0].position.x >= 100 &&
-      poses[0].pose.keypoints[0].position.x <= 550
+      poses[0].pose.keypoints[0].position.x >= 200 &&
+      poses[0].pose.keypoints[0].position.x <= 450
     ) {
       // test start
       let keypoint = poses[0].pose.keypoints[0];
@@ -153,14 +153,20 @@ function handleJump() {
         ctx.stroke();
       }
       // test end
-      let headY = poses[0].pose.keypoints[0].position.y;
-      console.log(`nose Y axis: ${headY}`);
+      // let headY = poses[0].pose.keypoints[0].position.y;
+      let currleftShoulderKeypoint = poses[0].pose.keypoints[5].position.y;
+      let currrightShoulderKeypoint = poses[0].pose.keypoints[6].position.y;
+
+      currShoulderYLine = (currleftShoulderKeypoint + currrightShoulderKeypoint) / 2;
+
+      console.log(`calibrated Y axis: ${calibratedYLine}`);
+      console.log(`current shoulder y axis: ${currShoulderYLine}`);
 
       // Detect a jump if the person's height is greater than 1.5 times their normal height
-      const jumpDetected = calibrateNoseLineY > headY + 70;
+      const jumpDetected = currShoulderYLine < calibratedYLine - 50;
 
       // Detect a crouch if the person's height is less than 0.5 times their normal height
-      const crouchDetected = calibrateNoseLineY < headY - 70;
+      const crouchDetected = currShoulderYLine > calibratedYLine + 50;
 
       if (jumpDetected) {
         console.log("jump");
@@ -168,8 +174,12 @@ function handleJump() {
         console.log("crouch");
       }
 
-      // console.log(poses[0].pose.keypoints[0].position.x);
-      console.log(calibrateNoseLineY);
+      ctx.strokeStyle = "red"; // You can use any valid CSS color here
+      ctx.beginPath();
+      ctx.moveTo(0, calibratedYLine);
+      ctx.lineTo(640, calibratedYLine);
+      ctx.stroke();
+      
     }
   }
 }
@@ -189,19 +199,19 @@ async function handleCalibration() {
 }
 
 function getPositionY() {
-  let leftShoulderKeypoint = poses[0].pose.keypoints[5];
-  let rightShoulderKeypoint = poses[0].pose.keypoints[6];
+  let leftShoulderKeypoint = poses[0].pose.keypoints[5].position.y;
+  let rightShoulderKeypoint = poses[0].pose.keypoints[6].position.y;
 
-  yAxixLeftShoulderLine = leftShoulderKeypoint.position.y;
-  yAxisRightShoulderLine = rightShoulderKeypoint.position.y;
-  yAxisNoseLine = poses[0].pose.keypoints[0].position.y;
-  calibrateNoseLineY = yAxisNoseLine;
+  // yAxisNoseLine = poses[0].pose.keypoints[0].position.y; // for testing
+  // calibrateNoseLineY = yAxisNoseLine;
 
-  calibratedYLine = (yAxixLeftShoulderLine + yAxisRightShoulderLine) / 2;
+  calibratedYLine = (leftShoulderKeypoint + rightShoulderKeypoint) / 2;
   console.log(calibrateNoseLineY);
   console.log(`Calibrated Y ${calibratedYLine}`);
 }
 
 function restartCalibration() {
   hasCalibrated = false;
+  // setTimeout(getPositionY, 7000);
+  // hasCalibrated = true;
 }
