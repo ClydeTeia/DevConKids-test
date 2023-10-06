@@ -5,9 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <link rel="stylesheet" href="styles.css" />
+    <script src="../posenet.js"></script>
     <script src="script.js" type="module"></script>
+    <script src="./dino.js"></script>
+    <script type="module" src="dino.js"></script>
   </head>
   <body>
+    <canvas id="canvas" width="640" height="480"></canvas>
+    <video
+      id="video"
+      width="640"
+      height="480"
+      autoplay
+      style="display: none"
+    ></video>
     <div class="world" data-world>
       <div class="score" data-score>0</div>
       <div class="start-screen" data-start-screen>
