@@ -16,13 +16,13 @@ const ctx = canvas.getContext("2d");
 
 // add here the global variables
 let calibratedYLine;
-let calibrateNoseLineY;
 let hasCalibrated = false; // make sure to reset this later on
 
 // Ends here
 
 // The detected positions will be inside an array
-let poses = [];
+// let poses = [];
+let firstPose = [];
 
 // Create a webcam capture
 if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -42,9 +42,11 @@ function drawCameraIntoCanvas() {
   // We can call both functions to draw all keypoints and the skeletons
   // drawKeypoints();
   // drawSkeleton();
-  logChanges();
+  drawKeypointsSinglePose();
+  // logChanges();
   handleCalibration();
   handleJump();
+
   window.requestAnimationFrame(drawCameraIntoCanvas);
 }
 // Loop over the drawCameraIntoCanvas function
@@ -56,7 +58,10 @@ poseNet.on("pose", gotPoses);
 
 // A function that gets called every time there's an update from the model
 function gotPoses(results) {
-  poses = results;
+  if (results.length > 0) {
+    firstPose = results[0];
+    console.log("FIRST POSE ", firstPose);
+  }
 
   // console.log(poses);   // DISABLE to improve performance
 }
@@ -69,10 +74,10 @@ function modelReady() {
 // A function to draw ellipses over the detected keypoints
 function drawKeypoints() {
   // Loop through all the poses detected
-  for (let i = 0; i < poses.length; i += 1) {
+  for (let i = 0; i < firstPose.length; i += 1) {
     // For each pose detected, loop through all the keypoints
-    for (let j = 0; j < poses[i].pose.keypoints.length; j += 1) {
-      let keypoint = poses[i].pose.keypoints[j];
+    for (let j = 0; j < firstPose[i].pose.keypoints.length; j += 1) {
+      let keypoint = firstPose[i].pose.keypoints[j];
       // Only draw an ellipse is the pose probability is bigger than 0.2
       if (keypoint.score > 0.3) {
         ctx.strokeStyle = "blue"; // You can use any valid CSS color here
@@ -80,6 +85,30 @@ function drawKeypoints() {
         ctx.arc(keypoint.position.x, keypoint.position.y, 10, 0, 2 * Math.PI);
         ctx.stroke();
       }
+    }
+  }
+}
+
+function drawKeypointsSinglePose() {
+  if (firstPose && firstPose.pose && firstPose.pose.keypoints) {
+    for (let i = 0; i < firstPose.pose.keypoints.length; i += 1) {
+      let keypoint = firstPose.pose.keypoints[i];
+      if (keypoint.score > 0.3) {
+        ctx.strokeStyle = "white"; // Set the color to white
+        ctx.beginPath();
+        ctx.arc(keypoint.position.x, keypoint.position.y, 10, 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+    }
+
+    for (let i = 0; i < firstPose.skeleton.length; i += 1) {
+      let partA = firstPose.skeleton[i][0];
+      let partB = firstPose.skeleton[i][1];
+      ctx.strokeStyle = "white"; // Set the color to white
+      ctx.beginPath();
+      ctx.moveTo(partA.position.x, partA.position.y);
+      ctx.lineTo(partB.position.x, partB.position.y);
+      ctx.stroke();
     }
   }
 }
@@ -130,22 +159,13 @@ function drawSkeleton() {
 }
 
 function handleJump() {
-  if (poses.length > 0) {
-    // let rightShoulderKeypoint = poses[0].pose.keypoints[6];
-    // let leftShoulderKeypoint = poses[0].pose.keypoints[5];
-
-    // console.log(
-    //   `rY: ${rightShoulderKeypoint.position.y} \n lY: ${leftShoulderKeypoint.position.y} \n`,
-    //   `rX: ${rightShoulderKeypoint.position.x} \n lX: ${leftShoulderKeypoint.position.x}`
-    // );
-
-    // Get the position of the person's head and feet
+  if (firstPose) {
     if (
-      poses[0].pose.keypoints[0].position.x >= 100 &&
-      poses[0].pose.keypoints[0].position.x <= 550
+      firstPose.pose.keypoints[5].position.x >= 100 &&
+      firstPose.pose.keypoints[6].position.x <= 550
     ) {
       // test start
-      let keypoint = poses[0].pose.keypoints[0];
+      let keypoint = firstPose.pose.keypoints[0];
       if (keypoint.score > 0.3) {
         ctx.strokeStyle = "blue"; // You can use any valid CSS color here
         ctx.beginPath();
@@ -153,14 +173,20 @@ function handleJump() {
         ctx.stroke();
       }
       // test end
-      let headY = poses[0].pose.keypoints[0].position.y;
-      console.log(`nose Y axis: ${headY}`);
+      let currRightShoulder = firstPose.pose.keypoints[5].position.y;
+      let currLeftShoulder = firstPose.pose.keypoints[6].position.y;
+
+      let currShoulderYLine = (currRightShoulder + currLeftShoulder) / 2;
+
+      console.log(`nose Y axis: ${currShoulderYLine}`);
 
       // Detect a jump if the person's height is greater than 1.5 times their normal height
-      const jumpDetected = calibrateNoseLineY > headY + 70;
+      const jumpDetected = calibratedYLine > currShoulderYLine + 70;
 
       // Detect a crouch if the person's height is less than 0.5 times their normal height
-      const crouchDetected = calibrateNoseLineY < headY - 70;
+      const crouchDetected = calibratedYLine < currShoulderYLine - 70;
+
+      console.log("test");
 
       if (jumpDetected) {
         console.log("jump");
@@ -169,15 +195,15 @@ function handleJump() {
       }
 
       // console.log(poses[0].pose.keypoints[0].position.x);
-      console.log(calibrateNoseLineY);
+      console.log(`Calibrated Y ${calibratedYLine}`);
     }
-  }
+  } else console.log("nothing is return");
 }
 
 async function handleCalibration() {
   try {
     if (!hasCalibrated) {
-      setTimeout(getPositionY, 7000);
+      setTimeout(getPositionY, 5000);
       hasCalibrated = true;
     }
   } catch (error) {
@@ -186,16 +212,13 @@ async function handleCalibration() {
 }
 
 function getPositionY() {
-  let leftShoulderKeypoint = poses[0].pose.keypoints[5];
-  let rightShoulderKeypoint = poses[0].pose.keypoints[6];
+  let leftShoulderKeypoint = firstPose.pose.keypoints[5].position.y;
+  let rightShoulderKeypoint = firstPose.pose.keypoints[6].position.y;
 
-  yAxixLeftShoulderLine = leftShoulderKeypoint.position.y;
-  yAxisRightShoulderLine = rightShoulderKeypoint.position.y;
-  yAxixNoseLine = poses[0].pose.keypoints[0].position.y;
-  calibrateNoseLineY = yAxixNoseLine;
+  yAxisNoseLine = firstPose.pose.keypoints[0].position.y;
 
-  calibratedYLine = (yAxixLeftShoulderLine + yAxisRightShoulderLine) / 2;
-  console.log(calibrateNoseLineY);
+  calibratedYLine = (leftShoulderKeypoint + rightShoulderKeypoint) / 2;
+
   console.log(`Calibrated Y ${calibratedYLine}`);
 }
 

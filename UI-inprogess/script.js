@@ -1,6 +1,10 @@
 import { updateGround, setupGround } from "./ground.js";
 import { updateDino, setupDino, getDinoRect, setDinoLose } from "./dino.js";
-import { updateCactus, setupCactus, getCactusRects } from "./cactus.js";
+import {
+  updateObstacles,
+  setupObstacles,
+  getObstacleRects,
+} from "./obstacles.js";
 
 const WORLD_WIDTH = 100;
 const WORLD_HEIGHT = 30;
@@ -9,10 +13,27 @@ const SPEED_SCALE_INCREASE = 0.00001;
 const worldElem = document.querySelector("[data-world]");
 const scoreElem = document.querySelector("[data-score]");
 const startScreenElem = document.querySelector("[data-start-screen]");
+const backgroundMusic = document.getElementById("background-music");
+const lose = "audio/vibrating-thud-39536.mp3";
 
 setPixelToWorldScale();
 window.addEventListener("resize", setPixelToWorldScale);
 document.addEventListener("keydown", handleStart, { once: true });
+
+function playBackgroundMusic() {
+  backgroundMusic.play();
+}
+
+function pauseBackgroundMusic() {
+  backgroundMusic.pause();
+}
+
+function setVolume(volume) {
+  backgroundMusic.volume = volume;
+}
+
+setVolume(0.2);
+playBackgroundMusic();
 
 let lastTime;
 let speedScale;
@@ -27,7 +48,7 @@ function update(time) {
 
   updateGround(delta, speedScale);
   updateDino(delta, speedScale);
-  updateCactus(delta, speedScale);
+  updateObstacles(delta, speedScale);
   updateSpeedScale(delta);
   updateScore(delta);
   if (checkLose()) return handleLose();
@@ -38,7 +59,7 @@ function update(time) {
 
 function checkLose() {
   const dinoRect = getDinoRect();
-  return getCactusRects().some((rect) => isCollision(rect, dinoRect));
+  return getObstacleRects().some((rect) => isCollision(rect, dinoRect));
 }
 
 function isCollision(rect1, rect2) {
@@ -61,21 +82,29 @@ function updateScore(delta) {
 
 function handleStart() {
   lastTime = null;
-  speedScale = 1;
+  speedScale = 1.3;
   score = 0;
   setupGround();
   setupDino();
-  setupCactus();
+  setupObstacles();
   startScreenElem.classList.add("hide");
   window.requestAnimationFrame(update);
+
+  playBackgroundMusic();
 }
 
 function handleLose() {
   setDinoLose();
+
+  const loseSFX = new Audio(lose);
+  loseSFX.play();
+
   setTimeout(() => {
     document.addEventListener("keydown", handleStart, { once: true });
     startScreenElem.classList.remove("hide");
   }, 100);
+
+  pauseBackgroundMusic();
 }
 
 function setPixelToWorldScale() {
