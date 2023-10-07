@@ -104,7 +104,7 @@ function handleJump(delta) {
   yVelocity -= GRAVITY * delta;
 }
 
-function onJump() {
+export function onJump() {
   if (isJumping) return;
 
   yVelocity = JUMP_SPEED;
@@ -124,7 +124,7 @@ function onJump() {
 //   }
 // }
 
-function onDuck() {
+export function onDuck() {
   if (isDucking) return;
 
   if (!isJumping) {
@@ -160,8 +160,8 @@ export function gotPoses(results) {
   poses = results;
   if (poses.length > 0) {
     if (
-      poses[0].pose.keypoints[0].position.x >= 200 &&
-      poses[0].pose.keypoints[0].position.x <= 450
+      poses[0].pose.keypoints[0].position.x >= 230 &&
+      poses[0].pose.keypoints[0].position.x <= 420
     ) {
       // test start
       // let keypoint = poses[0].pose.keypoints[0];
@@ -180,10 +180,10 @@ export function gotPoses(results) {
       console.log(`current shoulder y axis: ${currShoulderYLine}`);
 
       // Detect a jump if the person's height is greater than 1.5 times their normal height
-      const jumpDetected = currShoulderYLine < calibratedYLine - 25;
+      const jumpDetected = currShoulderYLine < calibratedYLine - 20;
 
       // Detect a crouch if the person's height is less than 0.5 times their normal height
-      const crouchDetected = currShoulderYLine > calibratedYLine + 50;
+      const crouchDetected = currShoulderYLine > calibratedYLine + 40;
 
       if (jumpDetected) {
         onJump();
@@ -204,17 +204,7 @@ export function gotPoses(results) {
       ctx.lineTo(640, calibratedYLine);
       ctx.stroke();
 
-      ctx.strokeStyle = "red"; // You can use any valid CSS color here
-      ctx.beginPath();
-      ctx.moveTo(200, 0);
-      ctx.lineTo(200, 480);
-      ctx.stroke();
 
-      ctx.strokeStyle = "red"; // You can use any valid CSS color here
-      ctx.beginPath();
-      ctx.moveTo(450, 0);
-      ctx.lineTo(450, 480);
-      ctx.stroke();
     }
   }
 }

@@ -75,5 +75,6 @@ body {
 video, canvas {
   z-index: 1;
   position: absolute;
-  bottom: 2000px;
+  top: 5px;
+  right: 10%;
 }
