@@ -13,8 +13,8 @@ const JUMP_SPEED = 0.45;
 const GRAVITY = 0.0012;
 const DINO_FRAME_COUNT = 2;
 const FRAME_TIME = 100;
-const footstep = 'audio/footstep3.mp3';
-const jump = 'audio/jump-sfx.mp3';
+const footstep = "audio/footstep3.mp3";
+const jump = "audio/jump-sfx.mp3";
 
 let duckFrame = 0;
 let lastDuckFrameTime = 0;
@@ -30,7 +30,6 @@ let isDucking = false;
 let calibratedYLine;
 
 let poses = [];
-
 
 export function setupDino() {
   isJumping = false;
@@ -134,7 +133,6 @@ function onDuck() {
   }
 }
 
-
 // Create a webcam capture
 if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
   navigator.mediaDevices.getUserMedia({ video: true }).then(function (stream) {
@@ -160,8 +158,10 @@ export function gotPoses(results) {
   poses = results;
   if (poses.length > 0) {
     if (
-      poses[0].pose.keypoints[0].position.x >= 200 &&
-      poses[0].pose.keypoints[0].position.x <= 450
+      poses[0].pose.keypoints[6].position.x >= 230 &&
+      poses[0].pose.keypoints[6].position.x <= 430 &&
+      poses[0].pose.keypoints[5].position.x >= 230 &&
+      poses[0].pose.keypoints[5].position.x <= 430
     ) {
       // test start
       // let keypoint = poses[0].pose.keypoints[0];
@@ -175,22 +175,23 @@ export function gotPoses(results) {
       let currleftShoulderKeypoint = poses[0].pose.keypoints[5].position.y;
       let currrightShoulderKeypoint = poses[0].pose.keypoints[6].position.y;
 
-      let currShoulderYLine = (currleftShoulderKeypoint + currrightShoulderKeypoint) / 2;
-      console.log(`calibrated Y axis: ${calibratedYLine}`);
-      console.log(`current shoulder y axis: ${currShoulderYLine}`);
+      let currShoulderYLine =
+        (currleftShoulderKeypoint + currrightShoulderKeypoint) / 2;
+      // console.log(`calibrated Y axis: ${calibratedYLine}`);
+      // console.log(`current shoulder y axis: ${currShoulderYLine}`);
 
       // Detect a jump if the person's height is greater than 1.5 times their normal height
-      const jumpDetected = currShoulderYLine < calibratedYLine - 50;
+      const jumpDetected = currShoulderYLine < calibratedYLine - 20;
 
       // Detect a crouch if the person's height is less than 0.5 times their normal height
-      const crouchDetected = currShoulderYLine > calibratedYLine + 50;
+      const crouchDetected = currShoulderYLine > calibratedYLine + 30;
 
       if (jumpDetected) {
         onJump();
-        console.log("jump");
+        // console.log("jump");
       } else if (crouchDetected) {
         onDuck();
-        console.log("crouch");
+        // console.log("crouch");
       } else {
         isDucking = false;
         if (!isJumping) {
@@ -202,6 +203,18 @@ export function gotPoses(results) {
       ctx.beginPath();
       ctx.moveTo(0, calibratedYLine);
       ctx.lineTo(640, calibratedYLine);
+      ctx.stroke();
+
+      ctx.strokeStyle = "black"; // You can use any valid CSS color here
+      ctx.beginPath();
+      ctx.moveTo(230, 0);
+      ctx.lineTo(230, 640);
+      ctx.stroke();
+
+      ctx.strokeStyle = "black"; // You can use any valid CSS color here
+      ctx.beginPath();
+      ctx.moveTo(430, 0);
+      ctx.lineTo(430, 640);
       ctx.stroke();
     }
   }
@@ -215,7 +228,7 @@ export function modelReady() {
 export async function handleCalibration() {
   try {
     if (!hasCalibrated) {
-      setTimeout(getPositionY, 7000);
+      setTimeout(getPositionY, 5000);
       hasCalibrated = true;
     }
   } catch (error) {
@@ -229,7 +242,7 @@ export function getPositionY() {
 
   calibratedYLine = (leftShoulderKeypoint + rightShoulderKeypoint) / 2;
 
-  console.log(`Calibrated Y ${calibratedYLine}`);
+  // console.log(`Calibrated Y ${calibratedYLine}`);
 }
 
 function logChanges() {

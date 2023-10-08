@@ -71,3 +71,9 @@ body {
   top: calc(var(--top) * 85%);
   height: 30%;
 }
+
+.camera {
+  position: absolute;
+  right: 100px;
+  top: 0px;
+}
