@@ -66,6 +66,7 @@ body {
   left: 10%;
   height: 30%;
   bottom: calc(var(--bottom) * 1%);
+  scale: calc(1.15);
 }
 
 .obstacle-ground {
